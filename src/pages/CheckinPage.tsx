@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react"
 import { AlertCircle, Loader2, ArrowLeft } from "lucide-react"
 import { api, isApiError } from "@/lib/api"
-import { cpfForApi, onlyDigits, hasCorrectLength, formatCpfDisplay } from "@/lib/cpf"
+import { cpfForApi, onlyDigits, hasCorrectLength, formatCpfDisplay } from "../lib/cpf"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {

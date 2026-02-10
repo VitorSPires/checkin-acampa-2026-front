@@ -56,111 +56,113 @@ export function isApiError(err: unknown): err is ApiErrorType {
   return err instanceof Error && "status" in err && typeof (err as ApiErrorType).status === "number"
 }
 
+const API = "/api"
+
 export const api = {
   checkin(cpf: string) {
-    return request<CheckinResponse>("/checkin", {
+    return request<CheckinResponse>(`${API}/checkin`, {
       method: "POST",
       body: JSON.stringify({ cpf }),
     })
   },
 
   checkout(cpf: string) {
-    return request<CheckoutResponse>("/checkout", {
+    return request<CheckoutResponse>(`${API}/checkout`, {
       method: "POST",
       body: JSON.stringify({ cpf }),
     })
   },
 
   listarPresentes() {
-    return request<ListarPresentesResponse>("/listar-presentes")
+    return request<ListarPresentesResponse>(`${API}/listar-presentes`)
   },
 
   getSistema() {
-    return request<Sistema>("/sistema")
+    return request<Sistema>(`${API}/sistema`)
   },
 
   updateSistema(body: SistemaUpdate) {
-    return request<Sistema>("/sistema", {
+    return request<Sistema>(`${API}/sistema`, {
       method: "PATCH",
       body: JSON.stringify(body),
     })
   },
 
   getUsuarios(skip = 0, limit = 100) {
-    return request<Usuario[]>(`/usuarios?skip=${skip}&limit=${limit}`)
+    return request<Usuario[]>(`${API}/usuarios?skip=${skip}&limit=${limit}`)
   },
 
   getUsuario(id: number) {
-    return request<Usuario>(`/usuarios/${id}`)
+    return request<Usuario>(`${API}/usuarios/${id}`)
   },
 
   createUsuario(body: UsuarioCreate) {
-    return request<Usuario>("/usuarios", {
+    return request<Usuario>(`${API}/usuarios`, {
       method: "POST",
       body: JSON.stringify(body),
     })
   },
 
   updateUsuario(id: number, body: UsuarioUpdate) {
-    return request<Usuario>(`/usuarios/${id}`, {
+    return request<Usuario>(`${API}/usuarios/${id}`, {
       method: "PATCH",
       body: JSON.stringify(body),
     })
   },
 
   deleteUsuario(id: number) {
-    return request<void>(`/usuarios/${id}`, { method: "DELETE" })
+    return request<void>(`${API}/usuarios/${id}`, { method: "DELETE" })
   },
 
   getTimes(skip = 0, limit = 100) {
-    return request<Time[]>(`/times?skip=${skip}&limit=${limit}`)
+    return request<Time[]>(`${API}/times?skip=${skip}&limit=${limit}`)
   },
 
   getTime(id: number) {
-    return request<Time>(`/times/${id}`)
+    return request<Time>(`${API}/times/${id}`)
   },
 
   createTime(body: TimeCreate) {
-    return request<Time>("/times", {
+    return request<Time>(`${API}/times`, {
       method: "POST",
       body: JSON.stringify(body),
     })
   },
 
   updateTime(id: number, body: TimeUpdate) {
-    return request<Time>(`/times/${id}`, {
+    return request<Time>(`${API}/times/${id}`, {
       method: "PATCH",
       body: JSON.stringify(body),
     })
   },
 
   deleteTime(id: number) {
-    return request<void>(`/times/${id}`, { method: "DELETE" })
+    return request<void>(`${API}/times/${id}`, { method: "DELETE" })
   },
 
   getOnibusList(skip = 0, limit = 100) {
-    return request<Onibus[]>(`/onibus?skip=${skip}&limit=${limit}`)
+    return request<Onibus[]>(`${API}/onibus?skip=${skip}&limit=${limit}`)
   },
 
   getOnibus(id: number) {
-    return request<Onibus>(`/onibus/${id}`)
+    return request<Onibus>(`${API}/onibus/${id}`)
   },
 
   createOnibus(body: OnibusCreate) {
-    return request<Onibus>("/onibus", {
+    return request<Onibus>(`${API}/onibus`, {
       method: "POST",
       body: JSON.stringify(body),
     })
   },
 
   updateOnibus(id: number, body: OnibusUpdate) {
-    return request<Onibus>(`/onibus/${id}`, {
+    return request<Onibus>(`${API}/onibus/${id}`, {
       method: "PATCH",
       body: JSON.stringify(body),
     })
   },
 
   deleteOnibus(id: number) {
-    return request<void>(`/onibus/${id}`, { method: "DELETE" })
+    return request<void>(`${API}/onibus/${id}`, { method: "DELETE" })
   },
 }
