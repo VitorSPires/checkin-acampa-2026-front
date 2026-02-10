@@ -125,11 +125,19 @@
     @apply bg-background text-foreground;
     margin: 0;
     min-height: 100vh;
+    min-height: 100svh;
   }
   #root {
     min-height: 100vh;
+    min-height: 100svh;
     min-width: 0;
   }
+}
+
+/* Altura segura (small viewport) para evitar scroll fantasma no mobile por causa da barra do navegador */
+.min-h-screen-safe {
+  min-height: 100vh;
+  min-height: 100svh;
 }
 
 /* Oculta setas de incremento/decremento em inputs numéricos (Chrome, Safari, Firefox) */

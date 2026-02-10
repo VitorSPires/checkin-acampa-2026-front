@@ -97,7 +97,7 @@ export default function CheckinPage() {
     const btnHover = dark ? "hover:bg-white/20" : "hover:bg-black/10"
     return (
       <div
-        className={cn("min-h-svh flex flex-col px-2 py-5 md:px-4 md:py-6", textClass)}
+        className={cn("min-h-screen-safe flex flex-col px-2 py-5 md:px-4 md:py-6", textClass)}
         style={{ backgroundColor: teamColor }}
       >
         <Button
@@ -132,7 +132,7 @@ export default function CheckinPage() {
   }
 
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center px-2 py-5 md:px-4 md:py-6">
+    <div className="flex min-h-screen-safe flex-col items-center justify-center px-2 py-5 md:px-4 md:py-6">
       <div className="w-full max-w-sm min-w-0 space-y-6 md:space-y-4">
         <h1 className="mb-12 text-center text-xl font-semibold">
           Check-in Acampa 2026

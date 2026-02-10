@@ -111,7 +111,7 @@ export default function AdmPage() {
 
   if (!unlocked) {
     return (
-      <div className="flex min-h-svh flex-col items-center justify-center px-2 py-5 md:px-4 md:py-6">
+      <div className="flex min-h-screen-safe flex-col items-center justify-center px-2 py-5 md:px-4 md:py-6">
         <form onSubmit={handleSenhaSubmit} className="w-full max-w-sm min-w-0 space-y-5 md:space-y-4">
           <h1 className="mb-12 text-center text-xl font-semibold">
             Administração
@@ -139,7 +139,7 @@ export default function AdmPage() {
   }
 
   return (
-    <div className="min-h-svh px-2 pt-5 pb-6 md:px-4 md:pt-6 md:pb-8">
+    <div className="min-h-screen-safe px-2 pt-5 pb-6 md:px-4 md:pt-6 md:pb-8">
       <div className="mx-auto w-full max-w-4xl">
         <h1 className="mb-6 text-xl font-semibold">Administração</h1>
         <Tabs defaultValue="presentes">
@@ -389,12 +389,13 @@ function OnibusSection() {
     setSaveLoading(true)
     try {
       if (editing) {
-        await api.updateOnibus(editing.id, { nome: form.nome })
+        const updated = await api.updateOnibus(editing.id, { nome: form.nome })
+        setList((prev) => prev.map((o) => (o.id === updated.id ? updated : o)))
       } else {
-        await api.createOnibus(form)
+        const created = await api.createOnibus(form)
+        setList((prev) => [...prev, created])
       }
       setModalOpen(false)
-      load()
     } finally {
       setSaveLoading(false)
     }
@@ -553,12 +554,13 @@ function TimesSection() {
         nome_responsavel: form.nome_responsavel || null,
       }
       if (editing) {
-        await api.updateTime(editing.id, payload)
+        const updated = await api.updateTime(editing.id, payload)
+        setList((prev) => prev.map((t) => (t.id === updated.id ? updated : t)))
       } else {
-        await api.createTime(payload as TimeCreate)
+        const created = await api.createTime(payload as TimeCreate)
+        setList((prev) => [...prev, created])
       }
       setModalOpen(false)
-      load()
     } finally {
       setSaveLoading(false)
     }
@@ -735,11 +737,25 @@ function UsuariosSection() {
     }
   }, [])
 
+  const loadTimesOnibus = useCallback(async () => {
+    try {
+      const [t, o] = await Promise.all([
+        api.getTimes(0, 500),
+        api.getOnibusList(0, 500),
+      ])
+      setTimes(t)
+      setOnibus(o)
+    } catch {
+      // mantém listas atuais em caso de erro
+    }
+  }, [])
+
   useEffect(() => {
     load()
   }, [load])
 
   const openCreate = () => {
+    loadTimesOnibus()
     setEditing(null)
     setForm({
       nome: "",
@@ -751,6 +767,7 @@ function UsuariosSection() {
     setModalOpen(true)
   }
   const openEdit = (item: Usuario) => {
+    loadTimesOnibus()
     setEditing(item)
     setForm({
       nome: item.nome,
@@ -772,12 +789,13 @@ function UsuariosSection() {
         id_onibus: form.id_onibus ?? null,
       }
       if (editing) {
-        await api.updateUsuario(editing.id, payload)
+        const updated = await api.updateUsuario(editing.id, payload)
+        setList((prev) => prev.map((u) => (u.id === updated.id ? updated : u)))
       } else {
-        await api.createUsuario(payload as UsuarioCreate)
+        const created = await api.createUsuario(payload as UsuarioCreate)
+        setList((prev) => [...prev, created])
       }
       setModalOpen(false)
-      load()
     } finally {
       setSaveLoading(false)
     }
@@ -788,8 +806,8 @@ function UsuariosSection() {
     setDeleteLoading(true)
     try {
       await api.deleteUsuario(deleteTarget.id)
+      setList((prev) => prev.filter((u) => u.id !== deleteTarget.id))
       setDeleteTarget(null)
-      load()
     } finally {
       setDeleteLoading(false)
     }
