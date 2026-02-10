@@ -15,10 +15,14 @@ import type {
   SistemaUpdate,
 } from "@/types/api"
 
-const BASE_URL =
-  typeof import.meta.env.VITE_API_URL === "string" && import.meta.env.VITE_API_URL
-    ? import.meta.env.VITE_API_URL.replace(/\/$/, "")
-    : "http://localhost:8000"
+const raw = typeof import.meta.env.VITE_API_URL === "string" && import.meta.env.VITE_API_URL
+  ? import.meta.env.VITE_API_URL.trim().replace(/\/$/, "")
+  : ""
+const BASE_URL = raw
+  ? raw.startsWith("http://") || raw.startsWith("https://")
+    ? raw
+    : `https://${raw}`
+  : "http://localhost:8000"
 
 async function request<T>(
   path: string,
