@@ -103,25 +103,28 @@ export default function CheckinPage() {
         <Button
           type="button"
           variant="ghost"
-          className={cn("self-start", btnHover)}
+          className={cn("self-start text-lg md:text-xl", btnHover)}
           onClick={reset}
         >
-          <ArrowLeft className="size-4" />
+          <ArrowLeft className="size-5 md:size-6" />
           Voltar
         </Button>
-        <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
-          <p className="text-2xl font-medium">
+        <div className="flex flex-1 flex-col items-center justify-center gap-5 text-center">
+          <p className="text-2xl font-medium md:text-4xl">
             {welcomeLabel(successData.sexo)} {firstName(successData.nome)}!
           </p>
           {successData.nome_time && (
-            <p>
+            <p className="text-lg md:text-xl">
               Você faz parte do time <strong>{successData.nome_time}</strong>.
             </p>
           )}
-          {successData.nome_onibus != null ? (
-            <p>Seu ônibus é o {successData.nome_onibus}.</p>
-          ) : (
-            <p>Seu ônibus não está definido.</p>
+          {successData.nome_responsavel_time?.trim() && (
+            <p className="text-base md:text-lg">
+              Fale com <strong>{successData.nome_responsavel_time}</strong> para pegar sua pulseira.
+            </p>
+          )}
+          {successData.nome_onibus != null && successData.nome_onibus.trim() !== "" && (
+            <p className="text-lg md:text-xl">Seu ônibus é o {successData.nome_onibus}.</p>
           )}
         </div>
       </div>
@@ -130,29 +133,33 @@ export default function CheckinPage() {
 
   return (
     <div className="flex min-h-svh flex-col items-center justify-center p-4">
-      <div className="w-full max-w-sm space-y-4">
-        <h1 className="mb-12 text-center text-xl font-semibold">Check-in acampa 2026</h1>
+      <div className="w-full max-w-sm space-y-5">
+        <h1 className="mb-8 text-center text-2xl font-semibold md:mb-12 md:text-3xl">
+          Check-in Acampa 2026
+        </h1>
         <div className="space-y-2">
-          <Label htmlFor="cpf">Informe seu CPF</Label>
+          <Label htmlFor="cpf" className="text-base md:text-lg">
+            Informe seu CPF
+          </Label>
           <Input
             id="cpf"
             type="text"
             inputMode="numeric"
             autoComplete="off"
             placeholder="000.000.000-00"
-            className="input-no-spinner text-base"
+            className="input-no-spinner h-12 text-lg md:h-14 md:text-xl"
             value={cpfRaw}
             onChange={(e) => setCpfRaw(formatCpfDisplay(e.target.value))}
             disabled={step === "loading"}
           />
         </div>
         <Button
-          className="w-full"
+          className="h-12 w-full text-base md:h-14 md:text-lg"
           disabled={!valid || step === "loading"}
           onClick={submit}
         >
           {step === "loading" ? (
-            <Loader2 className="size-4 animate-spin" />
+            <Loader2 className="size-5 animate-spin md:size-6" />
           ) : (
             "Enviar"
           )}
@@ -167,7 +174,7 @@ export default function CheckinPage() {
               Erro
             </DialogTitle>
           </DialogHeader>
-          <p className={cn("text-muted-foreground", step === "error" && "text-foreground")}>
+          <p className={cn("text-base text-muted-foreground md:text-lg", step === "error" && "text-foreground")}>
             {errorMessage}
           </p>
         </DialogContent>
