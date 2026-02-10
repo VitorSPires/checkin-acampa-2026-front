@@ -160,7 +160,7 @@ export default function CheckinPage() {
       </div>
 
       <Dialog open={step === "error"} onOpenChange={(open) => !open && setStep("form")}>
-        <DialogContent showCloseButton>
+        <DialogContent showCloseButton aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-destructive">
               <AlertCircle className="size-5" />
