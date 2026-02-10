@@ -52,6 +52,23 @@ import type {
   ListarPresentesResponse,
 } from "@/types/api"
 
+const ADM_SESSION_KEY = "checkin_adm_until"
+const ADM_SESSION_HOURS = 2
+const ADM_SESSION_MS = ADM_SESSION_HOURS * 60 * 60 * 1000
+
+function getAdmSessionValid(): boolean {
+  if (typeof window === "undefined") return false
+  const until = localStorage.getItem(ADM_SESSION_KEY)
+  if (!until) return false
+  const n = Number(until)
+  if (Number.isNaN(n)) return false
+  return Date.now() < n
+}
+
+function setAdmSession() {
+  localStorage.setItem(ADM_SESSION_KEY, String(Date.now() + ADM_SESSION_MS))
+}
+
 /** Formata ISO (UTC) para data/hora no fuso local do usuário (pt-BR). */
 function formatDateTime(iso: string | null): string {
   if (!iso) return "-"
@@ -68,7 +85,7 @@ function formatDateTime(iso: string | null): string {
 }
 
 export default function AdmPage() {
-  const [unlocked, setUnlocked] = useState(false)
+  const [unlocked, setUnlocked] = useState(getAdmSessionValid)
   const [senha, setSenha] = useState("")
   const [loading, setLoading] = useState(false)
   const [senhaError, setSenhaError] = useState("")
@@ -80,6 +97,7 @@ export default function AdmPage() {
     try {
       const sistema = await api.getSistema()
       if (sistema.senha_adm === senha) {
+        setAdmSession()
         setUnlocked(true)
       } else {
         setSenhaError("Senha incorreta.")
@@ -93,9 +111,11 @@ export default function AdmPage() {
 
   if (!unlocked) {
     return (
-      <div className="flex min-h-svh flex-col items-center justify-center p-4">
-        <form onSubmit={handleSenhaSubmit} className="w-full max-w-sm space-y-4">
-          <h1 className="text-center text-xl font-semibold mb-12">Administração</h1>
+      <div className="flex min-h-svh flex-col items-center justify-center px-2 py-5 md:px-4 md:py-6">
+        <form onSubmit={handleSenhaSubmit} className="w-full max-w-sm min-w-0 space-y-5 md:space-y-4">
+          <h1 className="mb-12 text-center text-xl font-semibold">
+            Administração
+          </h1>
           <div className="space-y-2">
             <Label htmlFor="senha">Senha</Label>
             <Input
@@ -119,8 +139,8 @@ export default function AdmPage() {
   }
 
   return (
-    <div className="min-h-svh px-4 pt-6 pb-8">
-      <div className="mx-auto max-w-4xl">
+    <div className="min-h-svh px-2 pt-5 pb-6 md:px-4 md:pt-6 md:pb-8">
+      <div className="mx-auto w-full max-w-4xl">
         <h1 className="mb-6 text-xl font-semibold">Administração</h1>
         <Tabs defaultValue="presentes">
           <TabsList>
