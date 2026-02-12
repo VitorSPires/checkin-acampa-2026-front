@@ -181,7 +181,7 @@ export default function CheckinPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-destructive">
               <AlertCircle className="size-5" />
-              Erro
+              CPF não encontrado
             </DialogTitle>
           </DialogHeader>
           <p className={cn("text-sm text-muted-foreground", step === "error" && "text-foreground")}>
