@@ -881,7 +881,7 @@ function SistemaSection() {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Mensagem CPF não encontrado</TableHead>
+            <TableHead>Orientação para CPF não encontrado</TableHead>
             <TableHead className="w-24"></TableHead>
           </TableRow>
         </TableHeader>
@@ -905,7 +905,7 @@ function SistemaSection() {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label>Mensagem CPF não encontrado</Label>
+              <Label>Orientação para CPF não encontrado</Label>
               <Input
                 value={form.mensagem_cpf_nao_encontrado ?? ""}
                 onChange={(e) =>
