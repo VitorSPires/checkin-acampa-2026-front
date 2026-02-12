@@ -145,12 +145,20 @@ export default function AdmPage() {
       <div className="mx-auto w-full max-w-4xl">
         <h1 className="mb-6 text-xl font-semibold">Administração</h1>
         <Tabs defaultValue="presentes">
-          <TabsList>
+          <TabsList className="flex flex-wrap gap-1">
             <TabsTrigger value="presentes">Lista de presentes</TabsTrigger>
+            <TabsTrigger value="corrigir">Corrigir cadastro</TabsTrigger>
+            <TabsTrigger value="incompletos">Cadastros incompletos</TabsTrigger>
             <TabsTrigger value="config">Configuração</TabsTrigger>
           </TabsList>
           <TabsContent value="presentes" className="mt-4">
             <PresentesAusentesTab />
+          </TabsContent>
+          <TabsContent value="corrigir" className="mt-4">
+            <CorrigirCadastroTab />
+          </TabsContent>
+          <TabsContent value="incompletos" className="mt-4">
+            <CadastrosIncompletosTab />
           </TabsContent>
           <TabsContent value="config" className="mt-4 space-y-8">
             <ConfiguracaoTab />
@@ -229,6 +237,575 @@ function PresentesAusentesTab() {
           </TableBody>
         </Table>
       </section>
+    </div>
+  )
+}
+
+const NONE_VALUE = "__none__"
+const DEBOUNCE_MS = 400
+
+function CorrigirCadastroTab() {
+  const [searchInput, setSearchInput] = useState("")
+  const [searchDebounced, setSearchDebounced] = useState("")
+  const [list, setList] = useState<Usuario[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
+
+  const [corrigirOpen, setCorrigirOpen] = useState(false)
+  const [corrigirUser, setCorrigirUser] = useState<Usuario | null>(null)
+  const [corrigirCpf, setCorrigirCpf] = useState("")
+  const [corrigirLoading, setCorrigirLoading] = useState(false)
+
+  const [addOpen, setAddOpen] = useState(false)
+  const [addForm, setAddForm] = useState<UsuarioCreate>({
+    nome: "",
+    cpf: "",
+    sexo: null,
+    id_time: null,
+    id_onibus: null,
+    id_pequeno_grupo: null,
+  })
+  const [addLoading, setAddLoading] = useState(false)
+  const [times, setTimes] = useState<Time[]>([])
+  const [onibus, setOnibus] = useState<Onibus[]>([])
+  const [pequenosGrupos, setPequenosGrupos] = useState<PequenoGrupo[]>([])
+
+  useEffect(() => {
+    const t = setTimeout(() => setSearchDebounced(searchInput.trim()), DEBOUNCE_MS)
+    return () => clearTimeout(t)
+  }, [searchInput])
+
+  const loadSearch = useCallback(async () => {
+    if (!searchDebounced) {
+      setList([])
+      return
+    }
+    setLoading(true)
+    setError("")
+    try {
+      const res = await api.getUsuarios(0, 500, searchDebounced)
+      setList(res)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erro ao buscar.")
+      setList([])
+    } finally {
+      setLoading(false)
+    }
+  }, [searchDebounced])
+
+  useEffect(() => {
+    loadSearch()
+  }, [loadSearch])
+
+  const openCorrigir = (u: Usuario) => {
+    setCorrigirUser(u)
+    setCorrigirCpf(formatCpfDisplay(u.cpf))
+    setCorrigirOpen(true)
+  }
+  const saveCorrigir = async () => {
+    if (!corrigirUser) return
+    setCorrigirLoading(true)
+    try {
+      const updated = await api.updateUsuario(corrigirUser.id, {
+        cpf: cpfForApi(corrigirCpf),
+      })
+      setList((prev) => prev.map((x) => (x.id === updated.id ? updated : x)))
+      setCorrigirOpen(false)
+    } finally {
+      setCorrigirLoading(false)
+    }
+  }
+
+  const loadListsForAdd = useCallback(async () => {
+    try {
+      const [t, o, pg] = await Promise.all([
+        api.getTimes(0, 500),
+        api.getOnibusList(0, 500),
+        api.getPequenosGrupos(0, 500),
+      ])
+      setTimes(t)
+      setOnibus(o)
+      setPequenosGrupos(pg)
+    } catch {
+      // mantém atuais
+    }
+  }, [])
+  const openAdd = () => {
+    loadListsForAdd()
+    setAddForm({
+      nome: "",
+      cpf: "",
+      sexo: null,
+      id_time: null,
+      id_onibus: null,
+      id_pequeno_grupo: null,
+    })
+    setAddOpen(true)
+  }
+  const saveAdd = async () => {
+    setAddLoading(true)
+    try {
+      const payload: UsuarioCreate = {
+        nome: addForm.nome,
+        cpf: cpfForApi(addForm.cpf),
+        sexo: addForm.sexo || null,
+        id_time: addForm.id_time ?? null,
+        id_onibus: addForm.id_onibus ?? null,
+        id_pequeno_grupo: addForm.id_pequeno_grupo ?? null,
+      }
+      const created = await api.createUsuario(payload)
+      setList((prev) => [...prev, created])
+      setAddOpen(false)
+      try {
+        await api.checkin(created.cpf)
+      } catch {
+        // já presente ou outro erro – não bloqueia
+      }
+    } finally {
+      setAddLoading(false)
+    }
+  }
+
+  const addSelectTime = addForm.id_time == null ? NONE_VALUE : String(addForm.id_time)
+  const addSelectOnibus = addForm.id_onibus == null ? NONE_VALUE : String(addForm.id_onibus)
+  const addSelectPg = addForm.id_pequeno_grupo == null ? NONE_VALUE : String(addForm.id_pequeno_grupo)
+
+  return (
+    <section className="rounded-lg border bg-card p-4">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+          <Label htmlFor="corrigir-busca" className="sr-only">
+            Buscar por nome
+          </Label>
+          <Input
+            id="corrigir-busca"
+            placeholder="Buscar por nome"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            className="max-w-xs"
+          />
+        </div>
+        <Button size="sm" onClick={openAdd}>
+          Adicionar usuário
+        </Button>
+      </div>
+      {error && <p className="mb-2 text-sm text-destructive">{error}</p>}
+      {loading ? (
+        <p className="text-muted-foreground">Buscando...</p>
+      ) : !searchDebounced ? (
+        <p className="text-muted-foreground">Digite o nome do acampante.</p>
+      ) : list.length === 0 ? (
+        <p className="text-muted-foreground">Nenhum resultado.</p>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Nome</TableHead>
+              <TableHead>CPF</TableHead>
+              <TableHead className="w-32"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {list.map((u) => (
+              <TableRow key={u.id}>
+                <TableCell>{u.nome}</TableCell>
+                <TableCell className="font-mono text-sm">{formatCpfDisplay(u.cpf)}</TableCell>
+                <TableCell>
+                  <Button variant="outline" size="sm" onClick={() => openCorrigir(u)}>
+                    Corrigir CPF
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
+      <Dialog open={corrigirOpen} onOpenChange={setCorrigirOpen}>
+        <DialogContent aria-describedby={undefined}>
+          <DialogHeader>
+            <DialogTitle>Corrigir CPF</DialogTitle>
+          </DialogHeader>
+          <p className="text-lg font-semibold text-foreground">
+            {corrigirUser?.nome}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Oriente a pessoa a fazer o check-in após salvar.
+          </p>
+          <div className="grid gap-2 py-4">
+            <Label>CPF</Label>
+            <Input
+              type="text"
+              inputMode="numeric"
+              autoComplete="off"
+              placeholder="000.000.000-00"
+              className="input-no-spinner font-mono"
+              value={corrigirCpf}
+              onChange={(e) => setCorrigirCpf(formatCpfDisplay(e.target.value))}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCorrigirOpen(false)} disabled={corrigirLoading}>
+              Cancelar
+            </Button>
+            <Button onClick={saveCorrigir} disabled={corrigirLoading}>
+              {corrigirLoading ? <Loader2 className="size-4 animate-spin" /> : "Salvar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={addOpen} onOpenChange={setAddOpen}>
+        <DialogContent className="max-w-md" aria-describedby={undefined}>
+          <DialogHeader>
+            <DialogTitle>Adicionar usuário</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label>Nome</Label>
+              <Input
+                value={addForm.nome}
+                onChange={(e) => setAddForm((f) => ({ ...f, nome: e.target.value }))}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label>CPF</Label>
+              <Input
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
+                placeholder="000.000.000-00"
+                className="input-no-spinner font-mono"
+                value={addForm.cpf}
+                onChange={(e) =>
+                  setAddForm((f) => ({ ...f, cpf: formatCpfDisplay(e.target.value) }))
+                }
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label>Sexo</Label>
+              <Select
+                value={addForm.sexo ?? ""}
+                onValueChange={(v) =>
+                  setAddForm((f) => ({ ...f, sexo: v === "" ? null : v }))
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="m">Masculino</SelectItem>
+                  <SelectItem value="f">Feminino</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label>Time</Label>
+              <Select
+                value={addSelectTime}
+                onValueChange={(v) =>
+                  setAddForm((f) => ({
+                    ...f,
+                    id_time: v === NONE_VALUE ? null : parseInt(v, 10),
+                  }))
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Nenhum" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NONE_VALUE}>Nenhum</SelectItem>
+                  {times.map((t) => (
+                    <SelectItem key={t.id} value={String(t.id)}>
+                      {t.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label>Ônibus</Label>
+              <Select
+                value={addSelectOnibus}
+                onValueChange={(v) =>
+                  setAddForm((f) => ({
+                    ...f,
+                    id_onibus: v === NONE_VALUE ? null : parseInt(v, 10),
+                  }))
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Nenhum" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NONE_VALUE}>Nenhum</SelectItem>
+                  {onibus.map((o) => (
+                    <SelectItem key={o.id} value={String(o.id)}>
+                      {o.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label>Pequeno grupo</Label>
+              <Select
+                value={addSelectPg}
+                onValueChange={(v) =>
+                  setAddForm((f) => ({
+                    ...f,
+                    id_pequeno_grupo: v === NONE_VALUE ? null : parseInt(v, 10),
+                  }))
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Nenhum" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NONE_VALUE}>Nenhum</SelectItem>
+                  {pequenosGrupos.map((p) => (
+                    <SelectItem key={p.id} value={String(p.id)}>
+                      {p.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddOpen(false)} disabled={addLoading}>
+              Cancelar
+            </Button>
+            <Button onClick={saveAdd} disabled={addLoading}>
+              {addLoading ? <Loader2 className="size-4 animate-spin" /> : "Salvar e marcar presente"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </section>
+  )
+}
+
+type AtribuirMode = "time" | "pg"
+
+function CadastrosIncompletosTab() {
+  const [list, setList] = useState<Usuario[]>([])
+  const [times, setTimes] = useState<Time[]>([])
+  const [onibus, setOnibus] = useState<Onibus[]>([])
+  const [pequenosGrupos, setPequenosGrupos] = useState<PequenoGrupo[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+  const [editing, setEditing] = useState<Usuario | null>(null)
+  const [atribuirMode, setAtribuirMode] = useState<AtribuirMode | null>(null)
+  const [atribuirTime, setAtribuirTime] = useState<number | null>(null)
+  const [atribuirPg, setAtribuirPg] = useState<number | null>(null)
+  const [saveLoading, setSaveLoading] = useState(false)
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    setError("")
+    try {
+      const [u, t, o, pg] = await Promise.all([
+        api.getUsuarios(0, 500),
+        api.getTimes(0, 500),
+        api.getOnibusList(0, 500),
+        api.getPequenosGrupos(0, 500),
+      ])
+      setList(u)
+      setTimes(t)
+      setOnibus(o)
+      setPequenosGrupos(pg)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erro ao carregar.")
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    load()
+  }, [load])
+
+  const semTime = list.filter((u) => u.id_time == null)
+  const semPg = list.filter((u) => u.id_pequeno_grupo == null)
+
+  const openAtribuirTime = (item: Usuario) => {
+    setEditing(item)
+    setAtribuirMode("time")
+    setAtribuirTime(item.id_time ?? null)
+    setAtribuirPg(null)
+  }
+  const openAtribuirPg = (item: Usuario) => {
+    setEditing(item)
+    setAtribuirMode("pg")
+    setAtribuirTime(null)
+    setAtribuirPg(item.id_pequeno_grupo ?? null)
+  }
+  const closeAtribuir = () => {
+    setEditing(null)
+    setAtribuirMode(null)
+  }
+  const saveAtribuir = async () => {
+    if (!editing) return
+    setSaveLoading(true)
+    try {
+      const payload: UsuarioUpdate =
+        atribuirMode === "time"
+          ? { id_time: atribuirTime }
+          : { id_pequeno_grupo: atribuirPg }
+      const updated = await api.updateUsuario(editing.id, payload)
+      setList((prev) => prev.map((u) => (u.id === updated.id ? updated : u)))
+      closeAtribuir()
+    } finally {
+      setSaveLoading(false)
+    }
+  }
+
+  const selectTimeValue = atribuirTime == null ? NONE_VALUE : String(atribuirTime)
+  const selectPgValue = atribuirPg == null ? NONE_VALUE : String(atribuirPg)
+
+  const nomeOnibus = (id: number | null) =>
+    id == null ? "-" : onibus.find((o) => o.id === id)?.nome ?? "-"
+  const nomePg = (id: number | null) =>
+    id == null ? "-" : pequenosGrupos.find((p) => p.id === id)?.nome ?? "-"
+  const nomeTime = (id: number | null) =>
+    id == null ? "-" : times.find((t) => t.id === id)?.nome ?? "-"
+
+  if (loading) return <p className="text-muted-foreground">Carregando...</p>
+  if (error) return <p className="text-destructive">{error}</p>
+
+  return (
+    <div className="space-y-8">
+      <section className="rounded-lg border bg-card p-4">
+        <h2 className="mb-3 font-medium">Sem time</h2>
+        {semTime.length === 0 ? (
+          <p className="text-muted-foreground">Nenhum acampante sem time.</p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nome</TableHead>
+                <TableHead>Ônibus</TableHead>
+                <TableHead>Pequeno grupo</TableHead>
+                <TableHead className="w-32"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {semTime.map((u) => (
+                <TableRow key={u.id}>
+                  <TableCell>{u.nome}</TableCell>
+                  <TableCell>{nomeOnibus(u.id_onibus)}</TableCell>
+                  <TableCell>{nomePg(u.id_pequeno_grupo)}</TableCell>
+                  <TableCell>
+                    <Button variant="outline" size="sm" onClick={() => openAtribuirTime(u)}>
+                      Atribuir time
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </section>
+      <section className="rounded-lg border bg-card p-4">
+        <h2 className="mb-3 font-medium">Sem pequeno grupo</h2>
+        {semPg.length === 0 ? (
+          <p className="text-muted-foreground">Nenhum acampante sem pequeno grupo.</p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nome</TableHead>
+                <TableHead>Time</TableHead>
+                <TableHead>Ônibus</TableHead>
+                <TableHead className="w-32"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {semPg.map((u) => (
+                <TableRow key={u.id}>
+                  <TableCell>{u.nome}</TableCell>
+                  <TableCell>{nomeTime(u.id_time)}</TableCell>
+                  <TableCell>{nomeOnibus(u.id_onibus)}</TableCell>
+                  <TableCell>
+                    <Button variant="outline" size="sm" onClick={() => openAtribuirPg(u)}>
+                      Atribuir PG
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </section>
+      <Dialog open={!!editing} onOpenChange={(open) => !open && closeAtribuir()}>
+        <DialogContent className="max-w-md" aria-describedby={undefined}>
+          <DialogHeader>
+            <DialogTitle>
+              {atribuirMode === "time" ? "Atribuir time" : "Atribuir pequeno grupo"}
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-lg font-semibold text-foreground">{editing?.nome}</p>
+          <div className="grid gap-2 py-4">
+            {atribuirMode === "time" && (
+              <>
+                <Label>Time</Label>
+                <Select
+                  value={selectTimeValue}
+                  onValueChange={(v) =>
+                    setAtribuirTime(v === NONE_VALUE ? null : parseInt(v, 10))
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Nenhum" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NONE_VALUE}>Nenhum</SelectItem>
+                    {times.map((t) => (
+                      <SelectItem key={t.id} value={String(t.id)}>
+                        {t.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </>
+            )}
+            {atribuirMode === "pg" && (
+              <>
+                <Label>Pequeno grupo</Label>
+                <Select
+                  value={selectPgValue}
+                  onValueChange={(v) =>
+                    setAtribuirPg(v === NONE_VALUE ? null : parseInt(v, 10))
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Nenhum" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NONE_VALUE}>Nenhum</SelectItem>
+                    {pequenosGrupos.map((p) => (
+                      <SelectItem key={p.id} value={String(p.id)}>
+                        {p.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={closeAtribuir}
+              disabled={saveLoading}
+            >
+              Cancelar
+            </Button>
+            <Button onClick={saveAtribuir} disabled={saveLoading}>
+              {saveLoading ? <Loader2 className="size-4 animate-spin" /> : "Salvar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

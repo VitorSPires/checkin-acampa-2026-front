@@ -95,8 +95,14 @@ export const api = {
     })
   },
 
-  getUsuarios(skip = 0, limit = 100) {
-    return request<Usuario[]>(`${API}/usuarios?skip=${skip}&limit=${limit}`)
+  getUsuarios(skip = 0, limit = 100, nome?: string) {
+    const params = new URLSearchParams()
+    params.set("skip", String(skip))
+    params.set("limit", String(limit))
+    if (nome != null && nome.trim() !== "") {
+      params.set("nome", nome.trim())
+    }
+    return request<Usuario[]>(`${API}/usuarios?${params.toString()}`)
   },
 
   getUsuario(id: number) {
