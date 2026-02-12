@@ -11,6 +11,9 @@ import type {
   Onibus,
   OnibusCreate,
   OnibusUpdate,
+  PequenoGrupo,
+  PequenoGrupoCreate,
+  PequenoGrupoUpdate,
   Sistema,
   SistemaUpdate,
 } from "@/types/api"
@@ -168,5 +171,31 @@ export const api = {
 
   deleteOnibus(id: number) {
     return request<void>(`${API}/onibus/${id}`, { method: "DELETE" })
+  },
+
+  getPequenosGrupos(skip = 0, limit = 100) {
+    return request<PequenoGrupo[]>(`${API}/pequenos-grupos?skip=${skip}&limit=${limit}`)
+  },
+
+  getPequenoGrupo(id: number) {
+    return request<PequenoGrupo>(`${API}/pequenos-grupos/${id}`)
+  },
+
+  createPequenoGrupo(body: PequenoGrupoCreate) {
+    return request<PequenoGrupo>(`${API}/pequenos-grupos`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    })
+  },
+
+  updatePequenoGrupo(id: number, body: PequenoGrupoUpdate) {
+    return request<PequenoGrupo>(`${API}/pequenos-grupos/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    })
+  },
+
+  deletePequenoGrupo(id: number) {
+    return request<void>(`${API}/pequenos-grupos/${id}`, { method: "DELETE" })
   },
 }

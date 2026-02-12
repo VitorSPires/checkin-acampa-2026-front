@@ -4,6 +4,8 @@ export interface CheckinResponse {
   nome_onibus: string | null
   nome_time: string | null
   nome_responsavel_time: string | null
+  nome_pequeno_grupo: string | null
+  nome_responsavel_pequeno_grupo: string | null
 }
 
 export interface CheckoutResponse {
@@ -35,6 +37,7 @@ export interface Usuario {
   sexo: string | null
   id_time: number | null
   id_onibus: number | null
+  id_pequeno_grupo: number | null
   datahora_checkin: string | null
   datahora_checkout: string | null
 }
@@ -45,6 +48,7 @@ export interface UsuarioCreate {
   sexo?: string | null
   id_time?: number | null
   id_onibus?: number | null
+  id_pequeno_grupo?: number | null
 }
 
 export interface UsuarioUpdate {
@@ -53,6 +57,7 @@ export interface UsuarioUpdate {
   sexo?: string | null
   id_time?: number | null
   id_onibus?: number | null
+  id_pequeno_grupo?: number | null
 }
 
 export interface Time {
@@ -85,6 +90,22 @@ export interface OnibusCreate {
 
 export interface OnibusUpdate {
   nome?: string | null
+}
+
+export interface PequenoGrupo {
+  id: number
+  nome: string
+  nome_responsavel: string | null
+}
+
+export interface PequenoGrupoCreate {
+  nome: string
+  nome_responsavel?: string | null
+}
+
+export interface PequenoGrupoUpdate {
+  nome?: string | null
+  nome_responsavel?: string | null
 }
 
 export interface Sistema {

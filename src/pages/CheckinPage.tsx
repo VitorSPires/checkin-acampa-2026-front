@@ -126,6 +126,16 @@ export default function CheckinPage() {
           {successData.nome_onibus != null && successData.nome_onibus.trim() !== "" && (
             <p className="text-base">Seu ônibus é o {successData.nome_onibus}.</p>
           )}
+          {successData.nome_pequeno_grupo != null &&
+            successData.nome_pequeno_grupo.trim() !== "" && (
+              <p className="text-base">
+                Seu pequeno grupo é <strong>{successData.nome_pequeno_grupo}</strong>
+                {successData.nome_responsavel_pequeno_grupo?.trim()
+                  ? ` (Responsável: ${successData.nome_responsavel_pequeno_grupo})`
+                  : ""}
+                .
+              </p>
+            )}
         </div>
       </div>
     )

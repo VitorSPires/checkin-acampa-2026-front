@@ -46,6 +46,8 @@ import type {
   Time,
   TimeCreate,
   TimeUpdate,
+  PequenoGrupo,
+  PequenoGrupoCreate,
   Usuario,
   UsuarioCreate,
   UsuarioUpdate,
@@ -237,6 +239,7 @@ function ConfiguracaoTab() {
       <SistemaSection />
       <OnibusSection />
       <TimesSection />
+      <PequenoGrupoSection />
       <UsuariosSection />
     </>
   )
@@ -699,10 +702,183 @@ function TimesSection() {
   )
 }
 
+function PequenoGrupoSection() {
+  const [list, setList] = useState<PequenoGrupo[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+  const [modalOpen, setModalOpen] = useState(false)
+  const [editing, setEditing] = useState<PequenoGrupo | null>(null)
+  const [form, setForm] = useState<PequenoGrupoCreate>({
+    nome: "",
+    nome_responsavel: null,
+  })
+  const [saveLoading, setSaveLoading] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<PequenoGrupo | null>(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    setError("")
+    try {
+      const res = await api.getPequenosGrupos(0, 500)
+      setList(res)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erro ao carregar.")
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    load()
+  }, [load])
+
+  const openCreate = () => {
+    setEditing(null)
+    setForm({ nome: "", nome_responsavel: null })
+    setModalOpen(true)
+  }
+  const openEdit = (item: PequenoGrupo) => {
+    setEditing(item)
+    setForm({ nome: item.nome, nome_responsavel: item.nome_responsavel ?? null })
+    setModalOpen(true)
+  }
+  const save = async () => {
+    setSaveLoading(true)
+    try {
+      if (editing) {
+        const updated = await api.updatePequenoGrupo(editing.id, {
+          nome: form.nome,
+          nome_responsavel: form.nome_responsavel ?? null,
+        })
+        setList((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
+      } else {
+        const created = await api.createPequenoGrupo(form)
+        setList((prev) => [...prev, created])
+      }
+      setModalOpen(false)
+    } finally {
+      setSaveLoading(false)
+    }
+  }
+  const confirmDelete = (item: PequenoGrupo) => setDeleteTarget(item)
+  const doDelete = async () => {
+    if (!deleteTarget) return
+    setDeleteLoading(true)
+    try {
+      await api.deletePequenoGrupo(deleteTarget.id)
+      setDeleteTarget(null)
+      load()
+    } finally {
+      setDeleteLoading(false)
+    }
+  }
+
+  if (loading) return <p className="text-muted-foreground">Carregando pequenos grupos...</p>
+  if (error) return <p className="text-destructive">{error}</p>
+
+  return (
+    <section className="rounded-lg border bg-card p-4">
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="font-medium">Pequeno grupo</h2>
+        <Button size="sm" onClick={openCreate}>
+          Novo
+        </Button>
+      </div>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Nome</TableHead>
+            <TableHead>Responsável</TableHead>
+            <TableHead className="w-32"></TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {list.map((p) => (
+            <TableRow key={p.id}>
+              <TableCell>{p.nome}</TableCell>
+              <TableCell>{p.nome_responsavel ?? "-"}</TableCell>
+              <TableCell className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => openEdit(p)}>
+                  Editar
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => confirmDelete(p)}
+                >
+                  Excluir
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent className="max-w-md" aria-describedby={undefined}>
+          <DialogHeader>
+            <DialogTitle>{editing ? "Editar pequeno grupo" : "Novo pequeno grupo"}</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label>Nome</Label>
+              <Input
+                value={form.nome}
+                onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label>Nome do responsável</Label>
+              <Input
+                value={form.nome_responsavel ?? ""}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    nome_responsavel: e.target.value.trim() || null,
+                  }))
+                }
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setModalOpen(false)} disabled={saveLoading}>
+              Cancelar
+            </Button>
+            <Button onClick={save} disabled={saveLoading}>
+              {saveLoading ? <Loader2 className="size-4 animate-spin" /> : "Salvar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir pequeno grupo?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir &quot;{deleteTarget?.nome}&quot;? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteLoading}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={doDelete}
+              disabled={deleteLoading}
+            >
+              {deleteLoading ? <Loader2 className="size-4 animate-spin" /> : "Excluir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </section>
+  )
+}
+
 function UsuariosSection() {
   const [list, setList] = useState<Usuario[]>([])
   const [times, setTimes] = useState<Time[]>([])
   const [onibus, setOnibus] = useState<Onibus[]>([])
+  const [pequenosGrupos, setPequenosGrupos] = useState<PequenoGrupo[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [modalOpen, setModalOpen] = useState(false)
@@ -713,6 +889,7 @@ function UsuariosSection() {
     sexo: null,
     id_time: null,
     id_onibus: null,
+    id_pequeno_grupo: null,
   })
   const [saveLoading, setSaveLoading] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<Usuario | null>(null)
@@ -722,14 +899,16 @@ function UsuariosSection() {
     setLoading(true)
     setError("")
     try {
-      const [u, t, o] = await Promise.all([
+      const [u, t, o, pg] = await Promise.all([
         api.getUsuarios(0, 500),
         api.getTimes(0, 500),
         api.getOnibusList(0, 500),
+        api.getPequenosGrupos(0, 500),
       ])
       setList(u)
       setTimes(t)
       setOnibus(o)
+      setPequenosGrupos(pg)
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erro ao carregar.")
     } finally {
@@ -737,14 +916,16 @@ function UsuariosSection() {
     }
   }, [])
 
-  const loadTimesOnibus = useCallback(async () => {
+  const loadTimesOnibusPequenosGrupos = useCallback(async () => {
     try {
-      const [t, o] = await Promise.all([
+      const [t, o, pg] = await Promise.all([
         api.getTimes(0, 500),
         api.getOnibusList(0, 500),
+        api.getPequenosGrupos(0, 500),
       ])
       setTimes(t)
       setOnibus(o)
+      setPequenosGrupos(pg)
     } catch {
       // mantém listas atuais em caso de erro
     }
@@ -755,7 +936,7 @@ function UsuariosSection() {
   }, [load])
 
   const openCreate = () => {
-    loadTimesOnibus()
+    loadTimesOnibusPequenosGrupos()
     setEditing(null)
     setForm({
       nome: "",
@@ -763,11 +944,12 @@ function UsuariosSection() {
       sexo: null,
       id_time: null,
       id_onibus: null,
+      id_pequeno_grupo: null,
     })
     setModalOpen(true)
   }
   const openEdit = (item: Usuario) => {
-    loadTimesOnibus()
+    loadTimesOnibusPequenosGrupos()
     setEditing(item)
     setForm({
       nome: item.nome,
@@ -775,6 +957,7 @@ function UsuariosSection() {
       sexo: item.sexo ?? null,
       id_time: item.id_time ?? null,
       id_onibus: item.id_onibus ?? null,
+      id_pequeno_grupo: item.id_pequeno_grupo ?? null,
     })
     setModalOpen(true)
   }
@@ -787,6 +970,7 @@ function UsuariosSection() {
         sexo: form.sexo || null,
         id_time: form.id_time ?? null,
         id_onibus: form.id_onibus ?? null,
+        id_pequeno_grupo: form.id_pequeno_grupo ?? null,
       }
       if (editing) {
         const updated = await api.updateUsuario(editing.id, payload)
@@ -817,6 +1001,8 @@ function UsuariosSection() {
   const NONE_VALUE = "__none__"
   const selectTimeValue = form.id_time == null ? NONE_VALUE : String(form.id_time)
   const selectOnibusValue = form.id_onibus == null ? NONE_VALUE : String(form.id_onibus)
+  const selectPequenoGrupoValue =
+    form.id_pequeno_grupo == null ? NONE_VALUE : String(form.id_pequeno_grupo)
 
   if (loading) return <p className="text-muted-foreground">Carregando Acampantes...</p>
   if (error) return <p className="text-destructive">{error}</p>
@@ -943,6 +1129,30 @@ function UsuariosSection() {
                   {onibus.map((o) => (
                     <SelectItem key={o.id} value={String(o.id)}>
                       {o.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label>Pequeno grupo</Label>
+              <Select
+                value={selectPequenoGrupoValue}
+                onValueChange={(v) =>
+                  setForm((f) => ({
+                    ...f,
+                    id_pequeno_grupo: v === NONE_VALUE ? null : parseInt(v, 10),
+                  }))
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Nenhum" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NONE_VALUE}>Nenhum</SelectItem>
+                  {pequenosGrupos.map((p) => (
+                    <SelectItem key={p.id} value={String(p.id)}>
+                      {p.nome}
                     </SelectItem>
                   ))}
                 </SelectContent>
