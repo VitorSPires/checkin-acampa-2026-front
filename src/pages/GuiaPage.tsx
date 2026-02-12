@@ -5,7 +5,7 @@ export default function GuiaPage() {
     <div className="min-h-screen-safe bg-background px-4 py-8 md:px-6 md:py-10">
       <article className="mx-auto max-w-3xl">
         <h1 className="mb-6 text-2xl font-bold md:text-3xl">
-          Guia do sistema de check-in – Voluntários
+          Guia do sistema de check-in
         </h1>
 
         <nav aria-label="Índice" className="mb-10 rounded-lg border bg-muted/40 p-4">

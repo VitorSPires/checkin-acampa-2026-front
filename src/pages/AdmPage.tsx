@@ -145,11 +145,19 @@ export default function AdmPage() {
       <div className="mx-auto w-full max-w-4xl">
         <h1 className="mb-6 text-xl font-semibold">Administração</h1>
         <Tabs defaultValue="presentes">
-          <TabsList className="flex flex-wrap gap-1">
-            <TabsTrigger value="presentes">Lista de presentes</TabsTrigger>
-            <TabsTrigger value="corrigir">Corrigir cadastro</TabsTrigger>
-            <TabsTrigger value="incompletos">Cadastros incompletos</TabsTrigger>
-            <TabsTrigger value="config">Configuração</TabsTrigger>
+          <TabsList className="flex min-h-9 w-full flex-wrap gap-x-1 gap-y-1.5">
+            <TabsTrigger value="presentes" className="h-auto py-1.5">
+              Lista de presentes
+            </TabsTrigger>
+            <TabsTrigger value="corrigir" className="h-auto py-1.5">
+              Corrigir cadastro
+            </TabsTrigger>
+            <TabsTrigger value="incompletos" className="h-auto py-1.5">
+              Cadastros incompletos
+            </TabsTrigger>
+            <TabsTrigger value="config" className="h-auto py-1.5">
+              Configuração
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="presentes" className="mt-4">
             <PresentesAusentesTab />
