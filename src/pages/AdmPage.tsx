@@ -571,7 +571,7 @@ function CorrigirCadastroTab() {
                   <SelectItem value={NONE_VALUE}>Nenhum</SelectItem>
                   {pequenosGrupos.map((p) => (
                     <SelectItem key={p.id} value={String(p.id)}>
-                      {p.nome}
+                      {p.nome_responsavel?.trim() ? `${p.nome} (${p.nome_responsavel})` : p.nome}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -672,8 +672,12 @@ function CadastrosIncompletosTab() {
 
   const nomeOnibus = (id: number | null) =>
     id == null ? "-" : onibus.find((o) => o.id === id)?.nome ?? "-"
-  const nomePg = (id: number | null) =>
-    id == null ? "-" : pequenosGrupos.find((p) => p.id === id)?.nome ?? "-"
+  const nomePg = (id: number | null) => {
+    if (id == null) return "-"
+    const pg = pequenosGrupos.find((p) => p.id === id)
+    if (!pg) return "-"
+    return pg.nome_responsavel?.trim() ? `${pg.nome} (${pg.nome_responsavel})` : pg.nome
+  }
   const nomeTime = (id: number | null) =>
     id == null ? "-" : times.find((t) => t.id === id)?.nome ?? "-"
 
@@ -792,7 +796,7 @@ function CadastrosIncompletosTab() {
                     <SelectItem value={NONE_VALUE}>Nenhum</SelectItem>
                     {pequenosGrupos.map((p) => (
                       <SelectItem key={p.id} value={String(p.id)}>
-                        {p.nome}
+                        {p.nome_responsavel?.trim() ? `${p.nome} (${p.nome_responsavel})` : p.nome}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -1373,16 +1377,16 @@ function PequenoGrupoSection() {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Nome</TableHead>
-            <TableHead>Responsável</TableHead>
+            <TableHead>Pequeno grupo</TableHead>
             <TableHead className="w-32"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {list.map((p) => (
             <TableRow key={p.id}>
-              <TableCell>{p.nome}</TableCell>
-              <TableCell>{p.nome_responsavel ?? "-"}</TableCell>
+              <TableCell>
+                {p.nome_responsavel?.trim() ? `${p.nome} (${p.nome_responsavel})` : p.nome}
+              </TableCell>
               <TableCell className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={() => openEdit(p)}>
                   Editar
@@ -1440,7 +1444,13 @@ function PequenoGrupoSection() {
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir pequeno grupo?</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir &quot;{deleteTarget?.nome}&quot;? Esta ação não pode ser desfeita.
+              Tem certeza que deseja excluir &quot;
+              {deleteTarget
+                ? deleteTarget.nome_responsavel?.trim()
+                  ? `${deleteTarget.nome} (${deleteTarget.nome_responsavel})`
+                  : deleteTarget.nome
+                : ""}
+              &quot;? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -1737,7 +1747,7 @@ function UsuariosSection() {
                   <SelectItem value={NONE_VALUE}>Nenhum</SelectItem>
                   {pequenosGrupos.map((p) => (
                     <SelectItem key={p.id} value={String(p.id)}>
-                      {p.nome}
+                      {p.nome_responsavel?.trim() ? `${p.nome} (${p.nome_responsavel})` : p.nome}
                     </SelectItem>
                   ))}
                 </SelectContent>
