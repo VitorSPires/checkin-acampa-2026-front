@@ -140,6 +140,14 @@
   min-height: 100svh;
 }
 
+/* Altura fixa = 100% da viewport (evita que o conteúdo estique a página) */
+.h-screen-fixed {
+  height: 100vh;
+  height: 100svh;
+  max-height: 100vh;
+  max-height: 100svh;
+}
+
 /* Oculta setas de incremento/decremento em inputs numéricos (Chrome, Safari, Firefox) */
 .input-no-spinner::-webkit-outer-spin-button,
 .input-no-spinner::-webkit-inner-spin-button {

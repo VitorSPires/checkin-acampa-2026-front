@@ -1,4 +1,5 @@
-import { useState, useCallback } from "react"
+import { useState, useCallback, useRef } from "react"
+import { useNavigate } from "react-router-dom"
 import { AlertCircle, Loader2, ArrowLeft } from "lucide-react"
 import { api, isApiError } from "@/lib/api"
 import { cpfForApi, onlyDigits, hasCorrectLength, formatCpfDisplay } from "../lib/cpf"
@@ -47,12 +48,51 @@ function isDarkBackground(hex: string): boolean {
   return luminance < 0.5
 }
 
+const TAP_WINDOW_MS = 1500
+const TAPS_REQUIRED = 3
+
 export default function CheckinPage() {
+  const navigate = useNavigate()
   const [cpfRaw, setCpfRaw] = useState("")
   const [step, setStep] = useState<Step>("form")
   const [errorMessage, setErrorMessage] = useState<string>("")
   const [successData, setSuccessData] = useState<CheckinResponse | null>(null)
   const [teamColor, setTeamColor] = useState<string>("#1a1a1a")
+
+  const threeFingersDownRef = useRef(false)
+  const tapCountRef = useRef(0)
+  const windowStartRef = useRef(0)
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 3) threeFingersDownRef.current = true
+    else threeFingersDownRef.current = false
+  }, [])
+
+  const handleTouchEnd = useCallback(
+    (e: React.TouchEvent) => {
+      if (e.touches.length === 0 && threeFingersDownRef.current) {
+        threeFingersDownRef.current = false
+        const now = Date.now()
+        if (tapCountRef.current === 0) windowStartRef.current = now
+        tapCountRef.current += 1
+        if (tapCountRef.current >= TAPS_REQUIRED) {
+          if (now - windowStartRef.current <= TAP_WINDOW_MS) {
+            tapCountRef.current = 0
+            navigate("/preview")
+          } else {
+            tapCountRef.current = 1
+            windowStartRef.current = now
+          }
+        }
+      } else if (e.touches.length !== 3) {
+        threeFingersDownRef.current = false
+      }
+      if (e.touches.length === 0 && tapCountRef.current > 0 && Date.now() - windowStartRef.current > TAP_WINDOW_MS) {
+        tapCountRef.current = 0
+      }
+    },
+    [navigate]
+  )
 
   const digits = onlyDigits(cpfRaw)
   const filled = hasCorrectLength(digits)
@@ -99,6 +139,8 @@ export default function CheckinPage() {
       <div
         className={cn("min-h-screen-safe flex flex-col px-2 py-5 md:px-4 md:py-6", textClass)}
         style={{ backgroundColor: teamColor }}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
       >
         <Button
           type="button"
@@ -142,7 +184,11 @@ export default function CheckinPage() {
   }
 
   return (
-    <div className="flex min-h-screen-safe flex-col items-center justify-center px-2 py-5 md:px-4 md:py-6">
+    <div
+      className="flex min-h-screen-safe flex-col items-center justify-center px-2 py-5 md:px-4 md:py-6"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
       <div className="w-full max-w-sm min-w-0 space-y-6 md:space-y-4">
         <h1 className="mb-12 text-center text-xl font-semibold">
           Check-in Acampa 2026
