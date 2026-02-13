@@ -430,50 +430,63 @@ function CorrigirCadastroTab() {
       )}
       <Dialog open={corrigirOpen} onOpenChange={setCorrigirOpen}>
         <DialogContent aria-describedby={undefined}>
-          <DialogHeader>
-            <DialogTitle>Corrigir CPF</DialogTitle>
-          </DialogHeader>
-          <p className="text-lg font-semibold text-foreground">
-            {corrigirUser?.nome}
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Oriente a pessoa a fazer o check-in após salvar.
-          </p>
-          <div className="grid gap-2 py-4">
-            <Label>CPF</Label>
-            <Input
-              type="text"
-              inputMode="numeric"
-              autoComplete="off"
-              placeholder="000.000.000-00"
-              className="input-no-spinner font-mono"
-              value={corrigirCpf}
-              onChange={(e) => setCorrigirCpf(formatCpfDisplay(e.target.value))}
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setCorrigirOpen(false)} disabled={corrigirLoading}>
-              Cancelar
-            </Button>
-            <Button onClick={saveCorrigir} disabled={corrigirLoading}>
-              {corrigirLoading ? <Loader2 className="size-4 animate-spin" /> : "Salvar"}
-            </Button>
-          </DialogFooter>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              saveCorrigir()
+            }}
+          >
+            <DialogHeader>
+              <DialogTitle>Corrigir CPF</DialogTitle>
+            </DialogHeader>
+            <p className="text-lg font-semibold text-foreground">
+              {corrigirUser?.nome}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Oriente a pessoa a fazer o check-in após salvar.
+            </p>
+            <div className="grid gap-2 py-4">
+              <Label>CPF</Label>
+              <Input
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
+                placeholder="000.000.000-00"
+                className="input-no-spinner font-mono"
+                value={corrigirCpf}
+                onChange={(e) => setCorrigirCpf(formatCpfDisplay(e.target.value))}
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setCorrigirOpen(false)} disabled={corrigirLoading}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={corrigirLoading}>
+                {corrigirLoading ? <Loader2 className="size-4 animate-spin" /> : "Salvar"}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent className="max-w-md" aria-describedby={undefined}>
-          <DialogHeader>
-            <DialogTitle>Adicionar usuário</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label>Nome</Label>
-              <Input
-                value={addForm.nome}
-                onChange={(e) => setAddForm((f) => ({ ...f, nome: e.target.value }))}
-              />
-            </div>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              saveAdd()
+            }}
+          >
+            <DialogHeader>
+              <DialogTitle>Adicionar usuário</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label>Nome</Label>
+                <Input
+                  value={addForm.nome}
+                  onChange={(e) => setAddForm((f) => ({ ...f, nome: e.target.value }))}
+                />
+              </div>
             <div className="grid gap-2">
               <Label>CPF</Label>
               <Input
@@ -578,14 +591,15 @@ function CorrigirCadastroTab() {
               </Select>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setAddOpen(false)} disabled={addLoading}>
-              Cancelar
-            </Button>
-            <Button onClick={saveAdd} disabled={addLoading}>
-              {addLoading ? <Loader2 className="size-4 animate-spin" /> : "Salvar e marcar presente"}
-            </Button>
-          </DialogFooter>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setAddOpen(false)} disabled={addLoading}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={addLoading}>
+                {addLoading ? <Loader2 className="size-4 animate-spin" /> : "Salvar e marcar presente"}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </section>
@@ -750,14 +764,20 @@ function CadastrosIncompletosTab() {
       </section>
       <Dialog open={!!editing} onOpenChange={(open) => !open && closeAtribuir()}>
         <DialogContent className="max-w-md" aria-describedby={undefined}>
-          <DialogHeader>
-            <DialogTitle>
-              {atribuirMode === "time" ? "Atribuir time" : "Atribuir pequeno grupo"}
-            </DialogTitle>
-          </DialogHeader>
-          <p className="text-lg font-semibold text-foreground">{editing?.nome}</p>
-          <div className="grid gap-2 py-4">
-            {atribuirMode === "time" && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              saveAtribuir()
+            }}
+          >
+            <DialogHeader>
+              <DialogTitle>
+                {atribuirMode === "time" ? "Atribuir time" : "Atribuir pequeno grupo"}
+              </DialogTitle>
+            </DialogHeader>
+            <p className="text-lg font-semibold text-foreground">{editing?.nome}</p>
+            <div className="grid gap-2 py-4">
+              {atribuirMode === "time" && (
               <>
                 <Label>Time</Label>
                 <Select
@@ -803,19 +823,21 @@ function CadastrosIncompletosTab() {
                 </Select>
               </>
             )}
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={closeAtribuir}
-              disabled={saveLoading}
-            >
-              Cancelar
-            </Button>
-            <Button onClick={saveAtribuir} disabled={saveLoading}>
-              {saveLoading ? <Loader2 className="size-4 animate-spin" /> : "Salvar"}
-            </Button>
-          </DialogFooter>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={closeAtribuir}
+                disabled={saveLoading}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={saveLoading}>
+                {saveLoading ? <Loader2 className="size-4 animate-spin" /> : "Salvar"}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>
@@ -904,35 +926,43 @@ function SistemaSection() {
       </Table>
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent aria-describedby={undefined}>
-          <DialogHeader>
-            <DialogTitle>Editar mensagem (CPF não encontrado)</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label>Orientação para CPF não encontrado</Label>
-              <Input
-                value={form.mensagem_cpf_nao_encontrado ?? ""}
-                onChange={(e) =>
-                  setForm((f) => ({
-                    ...f,
-                    mensagem_cpf_nao_encontrado: e.target.value,
-                  }))
-                }
-              />
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              save()
+            }}
+          >
+            <DialogHeader>
+              <DialogTitle>Editar mensagem (CPF não encontrado)</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label>Orientação para CPF não encontrado</Label>
+                <Input
+                  value={form.mensagem_cpf_nao_encontrado ?? ""}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      mensagem_cpf_nao_encontrado: e.target.value,
+                    }))
+                  }
+                />
+              </div>
             </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setModalOpen(false)}
-              disabled={saveLoading}
-            >
-              Cancelar
-            </Button>
-            <Button onClick={save} disabled={saveLoading}>
-              {saveLoading ? <Loader2 className="size-4 animate-spin" /> : "Salvar"}
-            </Button>
-          </DialogFooter>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setModalOpen(false)}
+                disabled={saveLoading}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={saveLoading}>
+                {saveLoading ? <Loader2 className="size-4 animate-spin" /> : "Salvar"}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </section>
@@ -1045,26 +1075,33 @@ function OnibusSection() {
       </Table>
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent aria-describedby={undefined}>
-          <DialogHeader>
-            <DialogTitle>{editing ? "Editar ônibus" : "Novo ônibus"}</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label>Nome</Label>
-              <Input
-                value={form.nome}
-                onChange={(e) => setForm({ nome: e.target.value })}
-              />
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              save()
+            }}
+          >
+            <DialogHeader>
+              <DialogTitle>{editing ? "Editar ônibus" : "Novo ônibus"}</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label>Nome</Label>
+                <Input
+                  value={form.nome}
+                  onChange={(e) => setForm({ nome: e.target.value })}
+                />
+              </div>
             </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setModalOpen(false)} disabled={saveLoading}>
-              Cancelar
-            </Button>
-            <Button onClick={save} disabled={saveLoading}>
-              {saveLoading ? <Loader2 className="size-4 animate-spin" /> : "Salvar"}
-            </Button>
-          </DialogFooter>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setModalOpen(false)} disabled={saveLoading}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={saveLoading}>
+                {saveLoading ? <Loader2 className="size-4 animate-spin" /> : "Salvar"}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
@@ -1220,51 +1257,58 @@ function TimesSection() {
       </Table>
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent aria-describedby={undefined}>
-          <DialogHeader>
-            <DialogTitle>{editing ? "Editar time" : "Novo time"}</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label>Nome</Label>
-              <Input
-                value={form.nome}
-                onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label>Cor</Label>
-              <div className="flex items-center gap-2">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              save()
+            }}
+          >
+            <DialogHeader>
+              <DialogTitle>{editing ? "Editar time" : "Novo time"}</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label>Nome</Label>
                 <Input
-                  type="color"
-                  value={form.cor_hex}
-                  onChange={(e) => setForm((f) => ({ ...f, cor_hex: e.target.value }))}
-                  className="h-10 w-14 shrink-0 cursor-pointer p-1"
+                  value={form.nome}
+                  onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))}
                 />
+              </div>
+              <div className="grid gap-2">
+                <Label>Cor</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="color"
+                    value={form.cor_hex}
+                    onChange={(e) => setForm((f) => ({ ...f, cor_hex: e.target.value }))}
+                    className="h-10 w-14 shrink-0 cursor-pointer p-1"
+                  />
+                  <Input
+                    value={form.cor_hex}
+                    onChange={(e) => setForm((f) => ({ ...f, cor_hex: e.target.value }))}
+                    className="font-mono"
+                  />
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <Label>Nome responsável</Label>
                 <Input
-                  value={form.cor_hex}
-                  onChange={(e) => setForm((f) => ({ ...f, cor_hex: e.target.value }))}
-                  className="font-mono"
+                  value={form.nome_responsavel ?? ""}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, nome_responsavel: e.target.value }))
+                  }
                 />
               </div>
             </div>
-            <div className="grid gap-2">
-              <Label>Nome responsável</Label>
-              <Input
-                value={form.nome_responsavel ?? ""}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, nome_responsavel: e.target.value }))
-                }
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setModalOpen(false)} disabled={saveLoading}>
-              Cancelar
-            </Button>
-            <Button onClick={save} disabled={saveLoading}>
-              {saveLoading ? <Loader2 className="size-4 animate-spin" /> : "Salvar"}
-            </Button>
-          </DialogFooter>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setModalOpen(false)} disabled={saveLoading}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={saveLoading}>
+                {saveLoading ? <Loader2 className="size-4 animate-spin" /> : "Salvar"}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
@@ -1405,38 +1449,45 @@ function PequenoGrupoSection() {
       </Table>
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="max-w-md" aria-describedby={undefined}>
-          <DialogHeader>
-            <DialogTitle>{editing ? "Editar pequeno grupo" : "Novo pequeno grupo"}</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label>Nome</Label>
-              <Input
-                value={form.nome}
-                onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))}
-              />
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              save()
+            }}
+          >
+            <DialogHeader>
+              <DialogTitle>{editing ? "Editar pequeno grupo" : "Novo pequeno grupo"}</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label>Nome</Label>
+                <Input
+                  value={form.nome}
+                  onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>Nome do responsável</Label>
+                <Input
+                  value={form.nome_responsavel ?? ""}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      nome_responsavel: e.target.value.trim() || null,
+                    }))
+                  }
+                />
+              </div>
             </div>
-            <div className="grid gap-2">
-              <Label>Nome do responsável</Label>
-              <Input
-                value={form.nome_responsavel ?? ""}
-                onChange={(e) =>
-                  setForm((f) => ({
-                    ...f,
-                    nome_responsavel: e.target.value.trim() || null,
-                  }))
-                }
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setModalOpen(false)} disabled={saveLoading}>
-              Cancelar
-            </Button>
-            <Button onClick={save} disabled={saveLoading}>
-              {saveLoading ? <Loader2 className="size-4 animate-spin" /> : "Salvar"}
-            </Button>
-          </DialogFooter>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setModalOpen(false)} disabled={saveLoading}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={saveLoading}>
+                {saveLoading ? <Loader2 className="size-4 animate-spin" /> : "Salvar"}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
@@ -1650,29 +1701,35 @@ function UsuariosSection() {
       </Table>
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="max-w-md" aria-describedby={undefined}>
-          <DialogHeader>
-            <DialogTitle>{editing ? "Editar usuário" : "Novo usuário"}</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label>Nome</Label>
-              <Input
-                value={form.nome}
-                onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label>CPF</Label>
-              <Input
-                type="text"
-                inputMode="numeric"
-                autoComplete="off"
-                placeholder="000.000.000-00"
-                className="input-no-spinner font-mono"
-                value={form.cpf}
-                onChange={(e) => setForm((f) => ({ ...f, cpf: formatCpfDisplay(e.target.value) }))}
-              />
-            </div>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              save()
+            }}
+          >
+            <DialogHeader>
+              <DialogTitle>{editing ? "Editar usuário" : "Novo usuário"}</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label>Nome</Label>
+                <Input
+                  value={form.nome}
+                  onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>CPF</Label>
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  placeholder="000.000.000-00"
+                  className="input-no-spinner font-mono"
+                  value={form.cpf}
+                  onChange={(e) => setForm((f) => ({ ...f, cpf: formatCpfDisplay(e.target.value) }))}
+                />
+              </div>
             <div className="grid gap-2">
               <Label>Sexo</Label>
               <Select
@@ -1763,14 +1820,15 @@ function UsuariosSection() {
               </Select>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setModalOpen(false)} disabled={saveLoading}>
-              Cancelar
-            </Button>
-            <Button onClick={save} disabled={saveLoading}>
-              {saveLoading ? <Loader2 className="size-4 animate-spin" /> : "Salvar"}
-            </Button>
-          </DialogFooter>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setModalOpen(false)} disabled={saveLoading}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={saveLoading}>
+                {saveLoading ? <Loader2 className="size-4 animate-spin" /> : "Salvar"}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>

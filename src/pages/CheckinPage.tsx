@@ -189,7 +189,13 @@ export default function CheckinPage() {
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      <div className="w-full max-w-sm min-w-0 space-y-6 md:space-y-4">
+      <form
+        className="w-full max-w-sm min-w-0 space-y-6 md:space-y-4"
+        onSubmit={(e) => {
+          e.preventDefault()
+          submit()
+        }}
+      >
         <h1 className="mb-12 text-center text-xl font-semibold">
           Check-in Acampa 2026
         </h1>
@@ -210,9 +216,9 @@ export default function CheckinPage() {
           />
         </div>
         <Button
+          type="submit"
           className="w-full"
           disabled={!valid || step === "loading"}
-          onClick={submit}
         >
           {step === "loading" ? (
             <Loader2 className="size-4 animate-spin" />
@@ -220,7 +226,7 @@ export default function CheckinPage() {
             "Enviar"
           )}
         </Button>
-      </div>
+      </form>
 
       <Dialog open={step === "error"} onOpenChange={(open) => !open && setStep("form")}>
         <DialogContent showCloseButton aria-describedby={undefined}>

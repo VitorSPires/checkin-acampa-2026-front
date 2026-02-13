@@ -157,7 +157,7 @@ export function useProPresenterPresentation(
 
   const setCurrentIndex = useCallback(
     (i: number) => {
-      setCurrentIndexState((prev) => {
+      setCurrentIndexState((_prev) => {
         const next = i
         if (next < 0 || next > lastIndex) {
           fetchPresentation()
