@@ -571,7 +571,7 @@ function CorrigirCadastroTab() {
                   <SelectItem value={NONE_VALUE}>Nenhum</SelectItem>
                   {pequenosGrupos.map((p) => (
                     <SelectItem key={p.id} value={String(p.id)}>
-                      {p.nome_responsavel?.trim() ? `${p.nome} (${p.nome_responsavel})` : p.nome}
+                      {`${p.nome} (${p.nome_responsavel ?? "-"})`}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -676,7 +676,7 @@ function CadastrosIncompletosTab() {
     if (id == null) return "-"
     const pg = pequenosGrupos.find((p) => p.id === id)
     if (!pg) return "-"
-    return pg.nome_responsavel?.trim() ? `${pg.nome} (${pg.nome_responsavel})` : pg.nome
+    return `${pg.nome} (${pg.nome_responsavel ?? "-"})`
   }
   const nomeTime = (id: number | null) =>
     id == null ? "-" : times.find((t) => t.id === id)?.nome ?? "-"
@@ -796,7 +796,7 @@ function CadastrosIncompletosTab() {
                     <SelectItem value={NONE_VALUE}>Nenhum</SelectItem>
                     {pequenosGrupos.map((p) => (
                       <SelectItem key={p.id} value={String(p.id)}>
-                        {p.nome_responsavel?.trim() ? `${p.nome} (${p.nome_responsavel})` : p.nome}
+                        {`${p.nome} (${p.nome_responsavel ?? "-"})`}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -1385,7 +1385,7 @@ function PequenoGrupoSection() {
           {list.map((p) => (
             <TableRow key={p.id}>
               <TableCell>
-                {p.nome_responsavel?.trim() ? `${p.nome} (${p.nome_responsavel})` : p.nome}
+                {`${p.nome} (${p.nome_responsavel ?? "-"})`}
               </TableCell>
               <TableCell className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={() => openEdit(p)}>
@@ -1445,11 +1445,7 @@ function PequenoGrupoSection() {
             <AlertDialogTitle>Excluir pequeno grupo?</AlertDialogTitle>
             <AlertDialogDescription>
               Tem certeza que deseja excluir &quot;
-              {deleteTarget
-                ? deleteTarget.nome_responsavel?.trim()
-                  ? `${deleteTarget.nome} (${deleteTarget.nome_responsavel})`
-                  : deleteTarget.nome
-                : ""}
+              {deleteTarget ? `${deleteTarget.nome} (${deleteTarget.nome_responsavel ?? "-"})` : ""}
               &quot;? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -1599,6 +1595,15 @@ function UsuariosSection() {
   const selectPequenoGrupoValue =
     form.id_pequeno_grupo == null ? NONE_VALUE : String(form.id_pequeno_grupo)
 
+  const nomeTime = (id: number | null) =>
+    id == null ? "-" : times.find((t) => t.id === id)?.nome ?? "-"
+  const nomePg = (id: number | null) => {
+    if (id == null) return "-"
+    const pg = pequenosGrupos.find((p) => p.id === id)
+    if (!pg) return "-"
+    return `${pg.nome} (${pg.nome_responsavel ?? "-"})`
+  }
+
   if (loading) return <p className="text-muted-foreground">Carregando Acampantes...</p>
   if (error) return <p className="text-destructive">{error}</p>
 
@@ -1616,6 +1621,8 @@ function UsuariosSection() {
             <TableHead>Nome</TableHead>
             <TableHead>CPF</TableHead>
             <TableHead>Sexo</TableHead>
+            <TableHead>Time</TableHead>
+            <TableHead>Pequeno grupo</TableHead>
             <TableHead>Check-in</TableHead>
             <TableHead className="w-32"></TableHead>
           </TableRow>
@@ -1626,6 +1633,8 @@ function UsuariosSection() {
               <TableCell>{u.nome}</TableCell>
               <TableCell>{u.cpf}</TableCell>
               <TableCell>{u.sexo ?? "-"}</TableCell>
+              <TableCell>{nomeTime(u.id_time)}</TableCell>
+              <TableCell>{nomePg(u.id_pequeno_grupo)}</TableCell>
               <TableCell>{formatDateTime(u.datahora_checkin)}</TableCell>
               <TableCell className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={() => openEdit(u)}>
@@ -1747,7 +1756,7 @@ function UsuariosSection() {
                   <SelectItem value={NONE_VALUE}>Nenhum</SelectItem>
                   {pequenosGrupos.map((p) => (
                     <SelectItem key={p.id} value={String(p.id)}>
-                      {p.nome_responsavel?.trim() ? `${p.nome} (${p.nome_responsavel})` : p.nome}
+                      {`${p.nome} (${p.nome_responsavel ?? "-"})`}
                     </SelectItem>
                   ))}
                 </SelectContent>
