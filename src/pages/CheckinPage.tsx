@@ -173,7 +173,7 @@ export default function CheckinPage() {
               <p className="text-base">
                 Seu pequeno grupo é <strong>{successData.nome_pequeno_grupo}</strong>
                 {successData.nome_responsavel_pequeno_grupo?.trim()
-                  ? ` líder: ${successData.nome_responsavel_pequeno_grupo}`
+                  ? ` - líder: ${successData.nome_responsavel_pequeno_grupo}`
                   : ""}
                 .
               </p>
