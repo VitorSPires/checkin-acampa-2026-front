@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
+import { Toaster } from "sonner"
 import CheckinPage from "@/pages/CheckinPage"
 import AdmPage from "@/pages/AdmPage"
 import GuiaPage from "@/pages/GuiaPage"
@@ -14,6 +15,7 @@ function getRootRedirectTo(): string {
 function App() {
   return (
     <BrowserRouter>
+      <Toaster richColors position="top-center" closeButton duration={4000} />
       <Routes>
         <Route path="/" element={<Navigate to={getRootRedirectTo()} replace />} />
         <Route path="/checkin" element={<CheckinPage />} />

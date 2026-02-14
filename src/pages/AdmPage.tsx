@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react"
 import { Loader2 } from "lucide-react"
+import { toast } from "sonner"
 import { api } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -38,6 +39,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { formatCpfDisplay, cpfForApi } from "@/lib/cpf"
+import { isApiError } from "@/lib/api"
 import type {
   Sistema,
   SistemaUpdate,
@@ -277,6 +279,7 @@ function CorrigirCadastroTab() {
   const [times, setTimes] = useState<Time[]>([])
   const [onibus, setOnibus] = useState<Onibus[]>([])
   const [pequenosGrupos, setPequenosGrupos] = useState<PequenoGrupo[]>([])
+  const [checkinLoadingId, setCheckinLoadingId] = useState<number | null>(null)
 
   useEffect(() => {
     const t = setTimeout(() => setSearchDebounced(searchInput.trim()), DEBOUNCE_MS)
@@ -309,6 +312,23 @@ function CorrigirCadastroTab() {
     setCorrigirUser(u)
     setCorrigirCpf(formatCpfDisplay(u.cpf))
     setCorrigirOpen(true)
+  }
+  const handleCheckin = async (u: Usuario) => {
+    if (u.datahora_checkin) return
+    setCheckinLoadingId(u.id)
+    try {
+      await api.checkin(cpfForApi(u.cpf))
+      setList((prev) =>
+        prev.map((x) =>
+          x.id === u.id ? { ...x, datahora_checkin: new Date().toISOString() } : x
+        )
+      )
+      toast.success(`${u.nome} foi marcado(a) como presente`)
+    } catch (e) {
+      toast.error(isApiError(e) ? e.message : "Erro ao marcar como presente.")
+    } finally {
+      setCheckinLoadingId(null)
+    }
   }
   const saveCorrigir = async () => {
     if (!corrigirUser) return
@@ -410,7 +430,7 @@ function CorrigirCadastroTab() {
             <TableRow>
               <TableHead>Nome</TableHead>
               <TableHead>CPF</TableHead>
-              <TableHead className="w-32"></TableHead>
+              <TableHead className="w-48"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -419,9 +439,25 @@ function CorrigirCadastroTab() {
                 <TableCell>{u.nome}</TableCell>
                 <TableCell className="font-mono text-sm">{formatCpfDisplay(u.cpf)}</TableCell>
                 <TableCell>
-                  <Button variant="outline" size="sm" onClick={() => openCorrigir(u)}>
-                    Corrigir CPF
-                  </Button>
+                  <div className="flex flex-wrap gap-1">
+                    <Button variant="outline" size="sm" onClick={() => openCorrigir(u)}>
+                      Corrigir CPF
+                    </Button>
+                    {!u.datahora_checkin && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleCheckin(u)}
+                        disabled={checkinLoadingId === u.id}
+                      >
+                        {checkinLoadingId === u.id ? (
+                          <Loader2 className="size-4 animate-spin" />
+                        ) : (
+                          "Check-in"
+                        )}
+                      </Button>
+                    )}
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
