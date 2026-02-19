@@ -12,10 +12,21 @@ function getRootRedirectTo(): string {
   return host === "localhost" || host === "127.0.0.1" ? "/preview" : "/checkin"
 }
 
+/** Indicador de build: em dev mostra "dev"; com ?build=1 mostra "ok" para confirmar que a app carregou a versão atual. */
+function BuildIndicator() {
+  const isDev = import.meta.env.DEV
+  const showFromQuery =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("build") === "1"
+  if (!isDev && !showFromQuery) return null
+  return (null)
+}
+
 function App() {
   return (
     <BrowserRouter>
       <Toaster richColors position="top-center" closeButton duration={4000} />
+      <BuildIndicator />
       <Routes>
         <Route path="/" element={<Navigate to={getRootRedirectTo()} replace />} />
         <Route path="/checkin" element={<CheckinPage />} />

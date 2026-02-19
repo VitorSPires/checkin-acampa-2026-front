@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import { Loader2, Maximize2, Settings } from "lucide-react"
 import { useProPresenterStage } from "@/lib/propresenter-ws"
 import { useProPresenterPresentation } from "@/lib/propresenter-api"
+import NoSleep from "nosleep.js"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -20,6 +21,8 @@ import {
 } from "@/components/ui/select"
 import PreviewLouvor from "@/pages/PreviewLouvor"
 import PreviewPregacao from "@/pages/PreviewPregacao"
+import { SilentVideoKeepAwake } from "@/lib/SilentVideoKeepAwake"
+import { SilentAudioKeepAwake } from "@/lib/SilentAudioKeepAwake"
 
 const STORAGE_IP = "propresenter_stage_ip"
 const STORAGE_TIPO = "preview_tipo"
@@ -29,6 +32,7 @@ export type PreviewTipo = "louvor" | "sermao"
 
 const TAP_WINDOW_MS = 1500
 const TAPS_REQUIRED = 3
+const MENU_HIDE_AFTER_MS = 10_000
 
 export default function PreviewPage() {
   const [configOpen, setConfigOpen] = useState(true)
@@ -44,6 +48,8 @@ export default function PreviewPage() {
   const threeFingersDownRef = useRef(false)
   const tapCountRef = useRef(0)
   const windowStartRef = useRef(0)
+  const [menuVisible, setMenuVisible] = useState(false)
+  const menuHideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const { state, status, fvVersion } = useProPresenterStage(ip || null, pwd || null)
   const presentation = useProPresenterPresentation(ip || null, fvVersion)
@@ -96,6 +102,7 @@ export default function PreviewPage() {
     setPwd(pwdVal)
     setConfigOpen(false)
     setConfigMandatory(false)
+    ;(noSleepRef.current ??= new NoSleep()).enable()
   }
 
   const handleOpenConfig = useCallback(() => {
@@ -144,6 +151,17 @@ export default function PreviewPage() {
   const hasCredentials = Boolean(ip && tipo && pwd)
   const showContent = hasCredentials && status === "connected" && !configOpen
 
+  const noSleepRef = useRef<InstanceType<typeof NoSleep> | null>(null)
+  useEffect(() => {
+    return () => {
+      noSleepRef.current?.disable()
+      noSleepRef.current = null
+    }
+  }, [])
+  useEffect(() => {
+    if (!showContent) noSleepRef.current?.disable()
+  }, [showContent])
+
   const toggleFullScreen = useCallback(() => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch(() => {})
@@ -151,6 +169,32 @@ export default function PreviewPage() {
       document.exitFullscreen()
     }
   }, [])
+
+  const clearMenuHideTimeout = useCallback(() => {
+    if (menuHideTimeoutRef.current != null) {
+      clearTimeout(menuHideTimeoutRef.current)
+      menuHideTimeoutRef.current = null
+    }
+  }, [])
+
+  const scheduleMenuHide = useCallback(() => {
+    clearMenuHideTimeout()
+    menuHideTimeoutRef.current = setTimeout(() => setMenuVisible(false), MENU_HIDE_AFTER_MS)
+  }, [clearMenuHideTimeout])
+
+  const showMenu = useCallback(() => {
+    setMenuVisible(true)
+    scheduleMenuHide()
+  }, [scheduleMenuHide])
+
+  const hideMenu = useCallback(() => {
+    setMenuVisible(false)
+    clearMenuHideTimeout()
+  }, [clearMenuHideTimeout])
+
+  useEffect(() => {
+    return () => clearMenuHideTimeout()
+  }, [clearMenuHideTimeout])
 
   if (hasCredentials && status === "connecting") {
     return (
@@ -180,24 +224,65 @@ export default function PreviewPage() {
               setCurrentIndex={presentation.setCurrentIndex}
             />
           )}
-          <div className="group fixed bottom-0 right-0 z-50 flex h-24 w-24 items-end justify-end gap-2 p-3">
-            <button
-              type="button"
-              onClick={toggleFullScreen}
-              className="flex size-12 items-center justify-center rounded-full bg-white/20 text-white opacity-0 backdrop-blur transition-opacity group-hover:opacity-100 hover:bg-white/30"
-              aria-label="Tela cheia"
-            >
-              <Maximize2 className="size-6" />
-            </button>
-            <button
-              type="button"
-              onClick={handleOpenConfig}
-              className="flex size-12 items-center justify-center rounded-full bg-white/20 text-white opacity-0 backdrop-blur transition-opacity group-hover:opacity-100 hover:bg-white/30"
-              aria-label="Abrir configurações"
-            >
-              <Settings className="size-6" />
-            </button>
+          <div className="fixed top-0 right-0 z-50 flex min-h-[80px] min-w-[140px] items-start justify-end pt-3 pr-3">
+            {!menuVisible ? (
+              <div
+                className="min-h-[44px] min-w-[120px] cursor-pointer rounded-lg"
+                role="button"
+                tabIndex={0}
+                aria-label="Mostrar menu"
+                onMouseEnter={showMenu}
+                onTouchEnd={(e) => {
+                  e.preventDefault()
+                  showMenu()
+                }}
+                onClick={(e) => {
+                  e.preventDefault()
+                  showMenu()
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault()
+                    showMenu()
+                  }
+                }}
+              />
+            ) : (
+              <div
+                className="flex gap-2 transition-opacity duration-200 opacity-100"
+                onMouseEnter={showMenu}
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    hideMenu()
+                    toggleFullScreen()
+                  }}
+                  className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg bg-white/25 p-2.5 text-white backdrop-blur hover:bg-white/40"
+                  aria-label="Tela cheia"
+                >
+                  <Maximize2 className="size-5 shrink-0" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    hideMenu()
+                    handleOpenConfig()
+                  }}
+                  className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg bg-white/25 p-2.5 text-white backdrop-blur hover:bg-white/40"
+                  aria-label="Abrir configurações"
+                >
+                  <Settings className="size-5 shrink-0" />
+                </button>
+              </div>
+            )}
           </div>
+          {showContent && (
+            <>
+              <SilentVideoKeepAwake />
+              <SilentAudioKeepAwake />
+            </>
+          )}
         </div>
       )}
 
@@ -256,6 +341,10 @@ export default function PreviewPage() {
             {connectionError && (
               <p className="text-sm text-destructive">{connectionError}</p>
             )}
+            <p className="text-xs text-muted-foreground">
+              Se a tela desligar por inatividade, desative a economia de energia ou aumente o
+              tempo de bloqueio nas definições do dispositivo.
+            </p>
             <Button type="submit" className="w-full">
               Concluir
             </Button>

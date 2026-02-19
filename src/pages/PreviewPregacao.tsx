@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useLayoutEffect, useRef } from "react"
 import { stageTriggerUrl } from "@/lib/propresenter-ws"
 import { presentationThumbnailUrl } from "@/lib/propresenter-api"
 import { Button } from "@/components/ui/button"
@@ -84,6 +84,8 @@ export default function PreviewPregacao({
 }: PreviewPregacaoPresentationProps) {
   const [currentImageError, setCurrentImageError] = useState(false)
   const [nextImageError, setNextImageError] = useState(false)
+  const notesScrollRef = useRef<HTMLDivElement>(null)
+  const savedScrollTopRef = useRef(0)
 
   useEffect(() => {
     setCurrentImageError(false)
@@ -91,6 +93,11 @@ export default function PreviewPregacao({
 
   useEffect(() => {
     setNextImageError(false)
+  }, [currentIndex])
+
+  useLayoutEffect(() => {
+    const el = notesScrollRef.current
+    if (el) el.scrollTop = savedScrollTopRef.current
   }, [currentIndex])
 
   const currentNotes = slides[currentIndex]?.notes ?? "—"
@@ -124,7 +131,13 @@ export default function PreviewPregacao({
   return (
     <div className="m-0 flex h-full min-h-screen-safe w-full overflow-hidden bg-black p-0">
       <div className="flex flex-1 flex-col overflow-hidden md:flex-row">
-        <div className="flex flex-1 flex-col overflow-y-auto p-4 text-white md:max-w-[50%]">
+        <div
+          ref={notesScrollRef}
+          className="flex flex-1 flex-col overflow-y-auto p-4 text-white md:max-w-[50%]"
+          onScroll={(e) => {
+            savedScrollTopRef.current = (e.target as HTMLDivElement).scrollTop
+          }}
+        >
           <div className="whitespace-pre-wrap text-base leading-relaxed">
             {currentNotes}
           </div>
