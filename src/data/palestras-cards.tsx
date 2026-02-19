@@ -48,7 +48,7 @@ export const palestrasCardsData: AppleCard[] = [
     category: "Palestra 4 - Domingo à noite",
     title: "Não jogue fora a sua felicidade",
     src: "/palestras/capas/nao-jogue-fora-a-sua-felicidade.webp",
-    objectPosition: "center center",
+    objectPosition: "50% 80%",
     content: (
       <p className="text-neutral-600 dark:text-neutral-400">
         A verdadeira felicidade que vem de Deus.
