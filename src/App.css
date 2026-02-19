@@ -158,3 +158,47 @@
   -moz-appearance: textfield;
   appearance: textfield;
 }
+
+/* Estilos do corpo da palestra (conteúdo gerado dos .htm) */
+.palestra-body {
+  @apply text-foreground;
+}
+.palestra-body p {
+  @apply mb-3 text-base leading-relaxed;
+}
+.palestra-body p.MsoNormal {
+  @apply text-neutral-700 dark:text-neutral-300;
+}
+.palestra-body p.MsoFootnoteText,
+.palestra-body p.MsoNormal a[name^="_ftn"][href^="#_ftnref"] {
+  @apply text-sm text-muted-foreground;
+}
+.palestra-body p.MsoFootnoteText,
+.palestra-body p.MsoNormal:has(> a[name^="_ftn"]) {
+  @apply mt-2 pt-1;
+}
+.palestra-body hr[width="33%"] {
+  @apply hidden;
+}
+.palestra-body p.first-footnote {
+  @apply mt-6 border-t border-border pt-6;
+}
+.palestra-body h2 {
+  @apply mt-8 mb-2 text-lg font-semibold text-primary;
+}
+.palestra-body h3 {
+  @apply mt-6 mb-2 text-base font-semibold text-primary;
+}
+.palestra-body b i span,
+.palestra-body p b i span[style*="10.0pt"] {
+  @apply font-semibold italic text-primary;
+}
+.palestra-body sup {
+  @apply text-xs;
+}
+.palestra-body a[href^="#_ftn"] {
+  @apply text-muted-foreground no-underline hover:underline;
+}
+.palestra-body i span {
+  @apply italic;
+}

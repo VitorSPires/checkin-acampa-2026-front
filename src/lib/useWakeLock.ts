@@ -16,7 +16,7 @@ export function useWakeLock(enabled: boolean) {
     try {
       const sentinel = await nav.wakeLock.request("screen")
       sentinelRef.current = sentinel
-      sentinel.addEventListener("release", () => {
+      ;(sentinel as unknown as EventTarget).addEventListener("release", () => {
         sentinelRef.current = null
       })
     } catch {

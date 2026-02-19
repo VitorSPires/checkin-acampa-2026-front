@@ -4,6 +4,8 @@ import CheckinPage from "@/pages/CheckinPage"
 import AdmPage from "@/pages/AdmPage"
 import GuiaPage from "@/pages/GuiaPage"
 import PreviewPage from "@/pages/PreviewPage"
+import PalestrasPage from "@/pages/PalestrasPage"
+import PalestraDetailPage from "@/pages/PalestraDetailPage"
 
 /** Local = localhost/127.0.0.1 → preview; publicado (Railway etc.) → checkin */
 function getRootRedirectTo(): string {
@@ -33,6 +35,8 @@ function App() {
         <Route path="/adm" element={<AdmPage />} />
         <Route path="/guia" element={<GuiaPage />} />
         <Route path="/preview" element={<PreviewPage />} />
+        <Route path="/palestras" element={<PalestrasPage />} />
+        <Route path="/palestras/:slug" element={<PalestraDetailPage />} />
       </Routes>
     </BrowserRouter>
   )
