@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useRef } from "react"
+import { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react"
 import { stageTriggerUrl } from "@/lib/propresenter-ws"
 import { presentationThumbnailUrl } from "@/lib/propresenter-api"
 import { Button } from "@/components/ui/button"
@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 
 export interface PreviewPregacaoPresentationProps {
   ip: string
+  port: string
   presentationUid: string | null
   currentIndex: number
   lastIndex: number
@@ -76,6 +77,7 @@ function SlideImage({
 
 export default function PreviewPregacao({
   ip,
+  port,
   presentationUid,
   currentIndex,
   lastIndex,
@@ -103,27 +105,45 @@ export default function PreviewPregacao({
   const currentNotes = slides[currentIndex]?.notes ?? "—"
   const currentUrl =
     presentationUid != null && currentIndex >= 0 && currentIndex <= lastIndex
-      ? presentationThumbnailUrl(ip, presentationUid, currentIndex)
+      ? presentationThumbnailUrl(ip, presentationUid, currentIndex, port)
       : null
   const nextIndex = currentIndex + 1
   const nextUrl =
     presentationUid != null && nextIndex <= lastIndex
-      ? presentationThumbnailUrl(ip, presentationUid, nextIndex)
+      ? presentationThumbnailUrl(ip, presentationUid, nextIndex, port)
       : null
 
-  const trigger = (action: "next" | "previous") => {
-    fetch(stageTriggerUrl(ip, action), { method: "GET" }).catch(() => {})
-  }
+  const trigger = useCallback(
+    (action: "next" | "previous") => {
+      fetch(stageTriggerUrl(ip, action, port), { method: "GET" }).catch(() => {})
+    },
+    [ip, port]
+  )
 
-  const handlePrevious = () => {
+  const handlePrevious = useCallback(() => {
     trigger("previous")
     setCurrentIndex(currentIndex - 1)
-  }
+  }, [trigger, setCurrentIndex, currentIndex])
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     trigger("next")
     setCurrentIndex(currentIndex + 1)
-  }
+  }, [trigger, setCurrentIndex, currentIndex])
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return
+      const el = e.target
+      if (el instanceof HTMLElement && el.closest("input, textarea, select, [contenteditable=true]")) {
+        return
+      }
+      e.preventDefault()
+      if (e.key === "ArrowLeft") handlePrevious()
+      else handleNext()
+    }
+    window.addEventListener("keydown", onKeyDown)
+    return () => window.removeEventListener("keydown", onKeyDown)
+  }, [handlePrevious, handleNext])
 
   const showCurrentImage = currentUrl != null && !currentImageError
   const showNextImage = nextUrl != null && !nextImageError

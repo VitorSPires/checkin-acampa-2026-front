@@ -1,10 +1,19 @@
 import { useEffect, useState, useCallback } from "react"
 
+const DEFAULT_PORT = "53398"
+
 function getHost(ip: string): string {
   return ip.trim().replace(/^https?:\/\//i, "").split("/")[0]
 }
 
-const BASE = (ip: string) => `http://${getHost(ip)}:53398`
+function getPort(port: string | null | undefined): string {
+  const p = String(port ?? "").trim()
+  return p || DEFAULT_PORT
+}
+
+function BASE(ip: string, port?: string | null): string {
+  return `http://${getHost(ip)}:${getPort(port)}`
+}
 
 /** Slide da API presentation (groups[].slides[]). */
 export interface ProPresenterPresentationSlide {
@@ -35,20 +44,21 @@ export interface ProPresenterSlideIndexResponse {
   }
 }
 
-export function presentationActiveUrl(ip: string): string {
-  return `${BASE(ip)}/v1/presentation/active`
+export function presentationActiveUrl(ip: string, port?: string | null): string {
+  return `${BASE(ip, port)}/v1/presentation/active`
 }
 
-export function presentationSlideIndexUrl(ip: string): string {
-  return `${BASE(ip)}/v1/presentation/slide_index`
+export function presentationSlideIndexUrl(ip: string, port?: string | null): string {
+  return `${BASE(ip, port)}/v1/presentation/slide_index`
 }
 
 export function presentationThumbnailUrl(
   ip: string,
   presentationUid: string,
-  index: number
+  index: number,
+  port?: string | null
 ): string {
-  return `${BASE(ip)}/v1/presentation/${presentationUid}/thumbnail/${index}`
+  return `${BASE(ip, port)}/v1/presentation/${presentationUid}/thumbnail/${index}`
 }
 
 /** Lista plana de slides (notes, text, label) para uso por índice. */
@@ -94,10 +104,12 @@ function getLastIndex(slides: PresentationSlideInfo[]): number {
 /**
  * @param ip - IP do ProPresenter
  * @param syncTrigger - Quando muda (ex.: fvVersion do WebSocket), refaz fetch de active + slide_index para sincronizar o índice com o ProPresenter
+ * @param port - Porta da API (padrão 53398)
  */
 export function useProPresenterPresentation(
   ip: string | null,
-  syncTrigger?: number
+  syncTrigger?: number,
+  port?: string | null
 ): UseProPresenterPresentationResult {
   const [presentationUid, setPresentationUid] = useState<string | null>(null)
   const [currentIndex, setCurrentIndexState] = useState(0)
@@ -108,8 +120,7 @@ export function useProPresenterPresentation(
 
   const fetchPresentation = useCallback(async () => {
     if (!ip?.trim()) return
-    const host = getHost(ip)
-    const base = `http://${host}:53398`
+    const base = BASE(ip, port)
     setStatus("loading")
     setError(null)
     try {
@@ -139,7 +150,7 @@ export function useProPresenterPresentation(
       setStatus("error")
       setError(e instanceof Error ? e.message : "Erro ao carregar presentation")
     }
-  }, [ip])
+  }, [ip, port])
 
   useEffect(() => {
     if (!ip?.trim()) {
