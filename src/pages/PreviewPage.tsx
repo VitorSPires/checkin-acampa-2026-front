@@ -380,6 +380,8 @@ export default function PreviewPage() {
               lastIndex={presentation.lastIndex}
               slides={presentation.slides}
               setCurrentIndex={presentation.setCurrentIndex}
+              currentSlideUid={state.currentSlideUid}
+              nextSlideUid={state.nextSlideUid}
             />
           )}
           <div className="fixed top-0 right-0 z-50 flex min-h-[80px] min-w-[140px] items-start justify-end pt-3 pr-3">

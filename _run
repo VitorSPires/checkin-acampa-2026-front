@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# _run — inicia o servidor de desenvolvimento
+
+FRONT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$FRONT_DIR"
+
+B=$'\e[1m'; DIM=$'\e[2m'; R=$'\e[0m'
+
+LOCAL_IP=$(ipconfig getifaddr en0 2>/dev/null \
+  || ipconfig getifaddr en1 2>/dev/null \
+  || ifconfig 2>/dev/null | awk '/inet / && !/127\.0\.0\.1/ {print $2; exit}' \
+  || echo "localhost")
+
+BASE="http://${LOCAL_IP}:5173"
+
+printf '\n%sApp:%s\n' "$B" "$R"
+printf '  \e]8;;%s\e\\%s\e]8;;\e\\\n' "$BASE" "$BASE"
+
+printf '\n%sQR Code:%s\n' "$B" "$R"
+if command -v qrencode &>/dev/null; then
+  qrencode -t UTF8 "$BASE"
+elif npx --yes qrcode-terminal@0.12.0 "$BASE" 2>/dev/null; then
+  :
+else
+  printf '  %s(instale: brew install qrencode)%s\n' "$DIM" "$R"
+fi
+
+printf '\n%s────────────────────────────────────────────%s\n\n' "$DIM" "$R"
+exec npm run dev
